@@ -1,0 +1,7 @@
+OpenJDK16.0.1/Source/openjdk-16.0.1_windows-x64_bin.zip
+*.intunewin
+*/intuneWin/*
+*.exe
+*.msi
+*.msp
+*.mst
