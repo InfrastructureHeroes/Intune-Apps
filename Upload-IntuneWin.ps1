@@ -1906,7 +1906,7 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
         }
         #Exit
         Write-Log -Message "Create AAD groups for install/uninstall"
-        $script:exitCode = New-AADGroup -groupName $AADGroupName
+        $script:exitCode = New-AADSWGroup -groupName $AADGroupName
 
         Write-Host "Sleeping for $sleep seconds to allow AAD group creation..." -f Magenta
         Start-Sleep $sleep
@@ -1943,17 +1943,17 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
 
 ####################################################
 
-Function New-AADGroup {
+Function New-AADSWGroup {
     <#
 .SYNOPSIS
 This function creates the relevant install/uninstall AAD groups
 .DESCRIPTION
 This function creates the relevant install/uninstall AAD groups
 .EXAMPLE
-New-AADGroup -groupName "MyGroupName"
+New-AADSWGroup -groupName "MyGroupName"
 This function creates the relevant install/uninstall AAD groups
 .NOTES
-NAME: New-AADGroup -groupName
+NAME: New-AADSWGroup -groupName
 #>
 
     [cmdletbinding()]
@@ -1970,7 +1970,14 @@ NAME: New-AADGroup -groupName
 
     Process {
         Write-Log -Message "groupName: [$groupName]"
-
+        $module = Import-Module AzureADPreview -PassThru -ErrorAction Ignore
+        if (-not $module)
+        {
+            Write-Log "Installing module AzureADPreview"
+            Install-Module AzureADPreview -Force -Confirm:$false -AllowClobber 
+        }
+        Write-Log "Import-Module AzureAD"
+        Import-Module AzureADPreview -Scope Global
         Connect-AzureAD -AccountId $Username
 
         $AADGroups = @("$groupName-Required", "$groupName-Available", "$groupName-Uninstall")
@@ -2575,7 +2582,7 @@ function New-IntuneWin32AppIcon {
     )
     # Handle error action preference for non-cmdlet code
     $ErrorActionPreference = "Stop"
-
+    $FilePath = $PSScriptRoot+"\"+$FilePath
     try {
         # Encode image file as Base64 string
         $EncodedBase64String = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$($FilePath)"))
