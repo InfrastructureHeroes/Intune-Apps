@@ -787,7 +787,18 @@ If ($Install) {
     $iargs = " /s"
     Write-Output "Lunch $exe with the following Args: $iargs "
     Start-Process -NoNewWindow -FilePath $exe -ArgumentList $iargs -Wait
-    IF (Test-Path "config.bat" ) { Start-Process -NoNewWindow -FilePath ".\config.bat" -Wait } 
+   Start-Sleep -Seconds 10
+    If (Test-Path -Path "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe") { $DCUCLI = "C:\Program Files (x86)\Dell\CommandUpdate\dcu-cli.exe"}
+    elseif (Test-path -Path "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe") { $DCUCLI = "C:\Program Files\Dell\CommandUpdate\dcu-cli.exe"} 
+    Else { Write-Log "DCU-CLI not found after install" -loglevel 1 ; $DCUCLI = $null }    
+    $XMLconfig = $(Get-ChildItem *.xml | Sort-Object -Property LastWriteTime -Descending)[0].Name
+    If (IsNull($XMLconfig)) { Write-Log "No XML File found"}
+    Else {
+            Write-Log "Found XML File $SMLconfig"
+            $cargs = ' /configure -importSettings="'+$PSScriptRoot+'\'+$XMLconfig+'"'  
+            Write-Output "Lunch $DCUCLI with the following Args: $cargs "
+            Start-Process -NoNewWindow -FilePath $DCUCLI -ArgumentList $Cargs -Wait
+          }
     
     #Handle Intune detection method
     If (! ($userInstall) ) {
