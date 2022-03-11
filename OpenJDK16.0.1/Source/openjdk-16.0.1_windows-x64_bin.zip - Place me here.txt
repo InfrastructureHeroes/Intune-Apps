@@ -1,0 +1,1 @@
+You can download the JDK at https://jdk.java.net/16/
