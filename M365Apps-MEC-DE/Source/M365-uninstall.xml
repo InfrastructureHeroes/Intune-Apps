@@ -1,0 +1,8 @@
+<Configuration>
+<Remove OfficeClientEdition="64">
+<Product ID="O365ProPlusRetail">
+<Language ID="en-us"/>
+</Product>
+</Remove>
+<Display Level="None" AcceptEULA="TRUE"/>
+</Configuration>
