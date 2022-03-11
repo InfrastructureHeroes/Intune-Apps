@@ -752,28 +752,28 @@ Position=0)]
 # https://devblogs.microsoft.com/scripting/use-powershell-to-modify-your-environmental-path/
 # Get the current search path from the environment keys in the registry.
 Write-Output "Folder to added to Path: $AddedFolder"
-$OldPath=(Get-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’ -Name PATH).Path
+$OldPath=(Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
 
 # See if a new folder has been supplied.
 
 IF (!$AddedFolder)
-{ Return ‘No Folder Supplied. $ENV:PATH Unchanged’}
+{ Return "No Folder Supplied. $ENV:PATH Unchanged"}
 
 # See if the new folder exists on the file system.
 
 IF (!(TEST-PATH $AddedFolder))
-{ Return ‘Folder Does not Exist, Cannot be added to $ENV:PATH’ }
+{ Return "Folder Does not Exist, Cannot be added to $ENV:PATH" }
 
 # See if the new Folder is already in the path.
 
 IF ($ENV:PATH | Select-String -SimpleMatch $AddedFolder)
-{ Return ‘Folder already within $ENV:PATH’ }
+{ Return "Folder already within $ENV:PATH" }
 
 # Set the New Path
 
-$NewPath=$OldPath+’;’+$AddedFolder
+$NewPath=$OldPath+";"+$AddedFolder
 
-Set-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’ -Name PATH –Value $newPath
+Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $newPath
 
 # Show our results back to the world
 
@@ -795,19 +795,19 @@ Position=0)]
 # https://devblogs.microsoft.com/scripting/use-powershell-to-modify-your-environmental-path/
 # Get the Current Search Path from the environment keys in the registry
 Write-Output "Try to remove folder from Path: $RemovedFolder"
-$NewPath = (Get-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’ -Name PATH).Path
+$NewPath = (Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
 Write-Output "Path: $NewPath"
-# Find the value to remove, replace it with $NULL. If it’s not found, nothing will change.
+# Find the value to remove, replace it with $NULL. If it's not found, nothing will change.
 
 $NewPath = $NewPath.replace($RemovedFolder,$NULL)
 
 # Update the Environment Path
 
-Set-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’ -Name PATH –Value $NewPath
+Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $NewPath
 
 # Show what we just did
 
-Return $(Get-ItemProperty -Path ‘Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment’ -Name PATH).Path
+Return $(Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
 
 }
 
