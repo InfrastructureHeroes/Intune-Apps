@@ -1,4 +1,4 @@
-# IntuneScripts
+# Intune-Apps
 Fork of Greg Nottage Intune Scripts by Fabian Niesen (InfrastrukturHelden.de / InfrastructureHeroes.org)
 This is a framework for software packaging and automated upload to Intune. 
 
@@ -14,3 +14,6 @@ To add a program to your Intune, you just need to run one script:
 This repository includes Dell Tools. Iwork4Dell, but this is a personal project without any relation or support from Dell.
 
 This script is supported as it is, usage is on your own risk. I recommend you check the code carfully and test ist before used in production.
+
+# License
+This scripts are available under the MIT License
