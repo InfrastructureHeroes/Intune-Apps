@@ -1226,6 +1226,7 @@ NAME: Upload-Win32LOB
 
         If ( $AppType -ne "Edge" ) {
             Write-Host "Testing if SourceFile '$SourceFile' Path is valid..." -ForegroundColor Yellow
+            $SourceFile = $PSScriptRoot +"\"+$SourceFile
             Test-SourceFile "$SourceFile"
             #$Win32Path = "$SourceFile"
 
