@@ -15,7 +15,12 @@ All you need is to run the script:
 
 The script also creates the needed AzureAD Groups for the software assignment.
 
-For more information check [Guide for Upload](Guide for Upload v1.3.docx).
+For more information check [Guide for Upload]("Guide for Upload v1.3.docx").
+
+
+New: Support for SCCM is as BETA available. Please report all issues or commit propper changes ;) Last would be preffered
+
+.\New-CMApp.ps1 -packagePath .\Dell_Command_Monitor_10.6.0.150\ -DistributionPointGroupName "Alle Server" -SourceLocation "\\sccm01-2019\Intune-Apps-Beta$\" -SCCMServer SCCM01-2019 -CollectionName "ALL Dell"
 
 # Disclaimer
 This repository includes Dell Tools. Iwork4Dell, but this is a personal project without any relation or support from Dell.
