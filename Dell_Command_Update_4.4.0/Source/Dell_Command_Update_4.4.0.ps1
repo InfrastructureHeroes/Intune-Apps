@@ -768,13 +768,15 @@ If ($Install) {
     {
         Write-Log "Found the following products:
         $($MSIGUIDs.Name) - $($MSIGUIDs.IdentifyingNumber)"
+        Write-Log "Stopping DellClientManagementService if running"
+        Stop-Service "DellClientManagementService" -Force -ErrorAction SilentlyContinue
         foreach ( $MSIGUID in $MSIGUIDs )
         {  
             IF ( ! ($MSIGUID.IdentifyingNumber -like "{4CD85DD3-A024-4409-A0F2-F70DE1E4A935}")) 
             { 
                 Write-Log "Remove MSI: $($MSIGUID.Name) - $($MSIGUID.IdentifyingNumber) "
                 $MSIGUID.Uninstall()
-                #Start-Process -NoNewWindow -FilePath "msiexec.exe" -ArgumentList " /x $MSIGUID /q" -Wait 
+                #Start-Process -NoNewWindow -FilePath "msiexec.exe" -ArgumentList " /x $MSIGUID /q REMOVE=ALL REBOOT=ReallySuppress" -Wait 
                 Start-Sleep -Seconds 30
             } 
         }
@@ -836,6 +838,8 @@ ElseIf ( $UnInstall ) {
     $MSIGUIDs = get-wmiobject Win32_Product | Where-Object { $_.Name -like "Dell Command*Update*" -or $_.Name -like "Dell Update for*" }
     Write-Log "Found the following products:
     $($MSIGUIDs.Name) - $($MSIGUIDs.IdentifyingNumber)"
+    Write-Log "Stopping DellClientManagementService if running"
+    Stop-Service "DellClientManagementService" -Force -ErrorAction SilentlyContinue
     foreach ( $MSIGUID in $MSIGUIDs )
     {  
         Write-Log "Remove MSI: $($MSIGUID.Name) - $($MSIGUID.IdentifyingNumber) "
