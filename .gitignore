@@ -5,3 +5,6 @@ OpenJDK16.0.1/Source/openjdk-16.0.1_windows-x64_bin.zip
 *.msi
 *.msp
 *.mst
+*.zip
+*.7z
+*.com
