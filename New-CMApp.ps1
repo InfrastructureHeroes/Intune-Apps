@@ -348,7 +348,7 @@ IF ( ! ( Get-CMApplication -Name $PackageName  )) #Detect different version is m
     }
     ELSE 
     { 
-        New-CMApplication -Name $PackageName -Description $script:Description -AutoInstall $true -Publisher $script:Publisher -ReleaseDate $(Get-Date) -SoftwareVersion $script:Version  | Format-Tablermat-Table -Property LocalizedDisplayName,DateLastModified -AutoSize  
+        New-CMApplication -Name $PackageName -Description $script:Description -AutoInstall $true -Publisher $script:Publisher -ReleaseDate $(Get-Date) -SoftwareVersion $script:Version  | Format-Table -Property LocalizedDisplayName,DateLastModified -AutoSize  
     }
     $app = Get-CMApplication -Name $PackageName
     IF ( ! (Test-Path $($site + ":\Application\Intune-Apps")) ) 
