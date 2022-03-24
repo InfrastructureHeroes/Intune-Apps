@@ -26,20 +26,31 @@ DistributionPointGroupName
 .PARAMETER 	SourceLocation
 UNC Path on Server for the Sources
 
+.PARAMETER  Required
+The software package will be set as Required instead of available
+
+.PARAMETER  SCCMServer
+Set SCCM server if this script is not started from the SCCM server
+
+.PARAMETER  CollectionName
+Set the collection to assign the software package
+
 .NOTES
-Author     : Fabian Niesen (www.fabian-niesen.de)
-Filename   : New-CMApp.ps1
-Requires   : PowerShell Version 3.0
-Version    : 0.4
-History    : 0.4   FN  22.03.2022  Bugfixes and some clean up
-             0.3   FN  95.07.2021  Bugfixes and additional improvments - Thanks to Oliver Düsterhöft
-             0.2   FN  28.06.2021  initial version
-             
+Author    : Fabian Niesen (www.fabian-niesen.de)
+Filename  : New-CMApp.ps1
+Requires  : PowerShell Version 3.0
+Version   : 0.5
+History   : 0.5   FN  24.03.2022  Add "-Required" to allow Required software packages, otherwise they will be available to the collection 
+            0.4   FN  22.03.2022  Bugfixes and some clean up
+            0.3   FN  95.07.2021  Bugfixes and additional improvments - Thanks to Oliver Düsterhöft
+            0.2   FN  28.06.2021  initial version
+
 .LINK
 https://github.com/InfrastructureHeroes/Intune-Apps
 
 .KnownBugs / ToDo
 - Only PS1 is supported now, MSI and EXE needs to be added
+- Switch for Required / Available
 #>
 [CmdLetBinding()]
 param(
@@ -58,9 +69,10 @@ param(
         ValueFromPipeline = $True,
         HelpMessage = 'Please enter UNC for IntuneApp Folder'
     )]
-    [string] $SourceLocation = "\\sccm01-2019\Intune-Apps$\",
+    [string] $SourceLocation = "\\sccm01-2019\Intune-Apps-Beta$\",
     [string] $SCCMServer = ([System.Net.Dns]::GetHostByName(($env:computerName))).Hostname,
-    [string] $CollectionName = "All Systems"
+    [string] $CollectionName = "All Systems",
+    [switch] $required
 
 )
 
@@ -147,9 +159,7 @@ Function Write-Log {
         [Parameter(HelpMessage = 'Outputs message to Event Log,when used with -WriteEventLog')]
         [switch]$WriteEventLog
     )
-    Write-Host
     Write-Host $Message
-    Write-Host
     $TimeGenerated = "$(Get-Date -Format HH:mm:ss).$((Get-Date).Millisecond)+000"
     $Line = '<![LOG[{0}]LOG]!><time="{1}" date="{2}" component="{3}" context="" type="{4}" thread="" file="">'
     $LineFormat = $Message, $TimeGenerated, (Get-Date -Format MM-dd-yyyy), "$($MyInvocation.ScriptName | Split-Path -Leaf):$($MyInvocation.ScriptLineNumber)", $LogLevel
@@ -283,6 +293,14 @@ NAME: Get-XMLConfig
 
 #endregion Build Functions  - Based on Upload-IntuneWin.ps1
 ##########################################################################################################
+<#
+
+.COPYRIGHT
+Copyright (c) Fabian Niesen. All rights reserved. Licensed under the MIT license.
+See LICENSE in the project root for license information.
+
+#>
+
 $runpath = Get-Location
 IF ( $packagePath.StartsWith(".\") ) { $packagePath = $packagePath.TrimStart(".\") }
 IF ( $packagePath.EndsWith("\") )    { $packagePath = $packagePath.TrimEnd("\") }
@@ -348,7 +366,7 @@ IF ( ! ( Get-CMApplication -Name $PackageName  )) #Detect different version is m
     }
     ELSE 
     { 
-        New-CMApplication -Name $PackageName -Description $script:Description -AutoInstall $true -Publisher $script:Publisher -ReleaseDate $(Get-Date) -SoftwareVersion $script:Version  | Format-Tablermat-Table -Property LocalizedDisplayName,DateLastModified -AutoSize  
+        New-CMApplication -Name $PackageName -Description $script:Description -AutoInstall $true -Publisher $script:Publisher -ReleaseDate $(Get-Date) -SoftwareVersion $script:Version  | Format-Table -Property LocalizedDisplayName,DateLastModified -AutoSize  
     }
     $app = Get-CMApplication -Name $PackageName
     IF ( ! (Test-Path $($site + ":\Application\Intune-Apps")) ) 
@@ -377,7 +395,16 @@ IF ( ! ( Get-CMApplication -Name $PackageName  )) #Detect different version is m
     Write-Log -Message "New-CMApplicationDeployment for $PackageName"
     IF ( ! ( Get-CMApplicationDeployment -Name $PackageName -CollectionName $CollectionName )) 
     {
-        New-CMApplicationDeployment -CollectionName "$CollectionName" -Name "$PackageName" -DeployAction Install -DeployPurpose Available -UserNotification DisplayAll -AvailableDateTime (get-date) -TimeBaseOn LocalTime -DistributeContent -DistributionPointGroupName $DistributionPointGroupName |  Format-Table -Property ApplicationName,Enabled,StartTime
+        If ($required)
+        {
+            Write-log "Create new Deployment for $PackageName, assigned to Collection $CollectionName as Required"
+            New-CMApplicationDeployment -CollectionName "$CollectionName" -Name "$PackageName" -DeployAction Install -DeployPurpose Required -UserNotification DisplayAll -AvailableDateTime (get-date) -TimeBaseOn LocalTime -DistributeContent -DistributionPointGroupName $DistributionPointGroupName |  Format-Table -Property ApplicationName,Enabled,StartTime
+        }
+        else {
+            Write-log "Create new Deployment for $PackageName, assigned to Collection $CollectionName as Available"
+            New-CMApplicationDeployment -CollectionName "$CollectionName" -Name "$PackageName" -DeployAction Install -DeployPurpose Available -UserNotification DisplayAll -AvailableDateTime (get-date) -TimeBaseOn LocalTime -DistributeContent -DistributionPointGroupName $DistributionPointGroupName |  Format-Table -Property ApplicationName,Enabled,StartTime    
+        }
+        
     } 
     ELSE 
     {

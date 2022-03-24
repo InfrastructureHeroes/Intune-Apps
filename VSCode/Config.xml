@@ -15,7 +15,7 @@
 		<!-- Edit the AppType element - supported options are MSI, EXE or PS1 -->
 		<AppType>EXE</AppType>
 		<!-- Edit the installCmdLine element when using the EXE or MSI AppType -->
-		<installCmdLine>VSCodeSetup-x64-1.44.2.exe /SILENT</installCmdLine>
+		<installCmdLine>VSCodeSetup-x64-1.64.2.exe /SILENT</installCmdLine>
 		<!-- Edit the uninstallCmdLine element when using the EXE or MSI AppType -->
 		<uninstallCmdLine>C:\Program Files\Microsoft VS Code\unins000.exe</uninstallCmdLine>
 		<!-- Edit the RuleType element - supported options are TAGFILE , FILE or REGTAG -->
@@ -29,9 +29,9 @@
 		<InstallExperience>System</InstallExperience>
 		<!-- Edit the PackageName element to match the name of the .PS1 script that the IntuneWinAppUtil should reference -->
 		<!-- For MSI or EXE AppType - this must be the name of the MSI or executable file in the ..\Source folder - without the .exe in the name -->
-		<PackageName>VSCodeSetup-x64-1.44.2</PackageName>
+		<PackageName>VSCodeSetup-x64-1.64.2</PackageName>
 		<!-- Edit the displayName element that will be shown for the imported package in the Intune console -->
-		<displayName>Microsoft Visual Studio Code</displayName>
+		<displayName>Microsoft Visual Studio Code X64</displayName>
 		<!-- Edit the Description element that will be shown for the imported package in the Intune console -->
 		<Description>Editor for script development</Description>
 		<!-- Edit the Publisher name if required -->
@@ -41,6 +41,7 @@
 		<!-- Edit the LogoFile element to provide a logo shown in Company Portal -->
 		<LogoFile>visual-studio-code-logo-png-transparent.png</LogoFile>
 		<!-- Edit the AADGroupName element used for the required/available/uninstall group creation -->
-		<AADGroupName>ID-WIN10-OBJECT-APP-Install VSCode v1.0</AADGroupName>
+		<AADGroupName>AAD-RG-SW-VSCode-v1.64.2</AADGroupName>
+		<!--Version>1.64.2</Version-->
 	</IntuneWin_Settings>
 </CONFIG>
