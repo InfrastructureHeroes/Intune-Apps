@@ -1,0 +1,56 @@
+<!-- <></> -->
+<CONFIG>
+	<!-- Apart from username, leave Azure_Settings unchanged -->
+	<!-- Completely remove the <Username> element and script will prompt -->
+	<Azure_Settings>
+		<Username>IntuneUser@YourTenantName.com</Username>
+		<baseUrl>https://graph.microsoft.com/beta/deviceAppManagement/</baseUrl>
+		<logRequestUris>$true</logRequestUris>
+		<logHeaders>$false</logHeaders>
+		<logContent>$true</logContent>
+		<azureStorageUploadChunkSizeInMb>6l</azureStorageUploadChunkSizeInMb>
+		<sleep>20</sleep>
+	</Azure_Settings>
+	<IntuneWin_Settings>
+		<!-- Edit the AppType element - supported options are MSI, EXE or PS1 -->
+		<AppType>EXE</AppType>
+		<!-- Edit the installCmdLine element when using the EXE or MSI AppType -->
+		<installCmdLine>M365Apps-MEC-DE-Test.exe -DeploymentType 'Install' -DeployMode 'NonInteractive'</installCmdLine>
+		<!-- Edit the uninstallCmdLine element when using the EXE or MSI AppType -->
+		<uninstallCmdLine>M365Apps-MEC-DE-Test.exe -DeploymentType "Uninstall"</uninstallCmdLine>
+		<!-- Edit the RuleType element - supported options are CUSTOM, TAGFILE , FILE or REGTAG -->
+		<!-- Ignored if AppType is MSI-->
+		<RuleType>CUSTOM</RuleType>
+		<!-- Edit for custom detection Rule - CustomType can be FILE or REGKEY -->
+		<CustomType>REGKEY</CustomType>
+		<CustomRule></CustomRule>
+		<!-- Can be Reg or File Path-->
+		<CustomPath>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\O365ProPlusRetail - de-de</CustomPath>
+		<!-- Only "EXISTS" is implemented-->
+		<CustomMethod>EXISTS</CustomMethod>
+		<!-- Edit the FilePath element when using the FILE RuleType -->
+		<FilePath></FilePath>
+		<!-- !!! Do NOT Edit the ReturnCodeType element !!! -->
+		<ReturnCodeType>DEFAULT</ReturnCodeType>
+		<!-- Edit the InstallExperience element - supported options are System or User -->
+		<InstallExperience>System</InstallExperience>
+		<!-- Edit the PackageName element to match the name of the .PS1 script that the IntuneWinAppUtil should reference -->
+		<!-- For MSI or EXE AppType - this must be the name of the MSI or executable file in the ..\Source folder - without the .exe in the name -->
+		<PackageName>M365Apps-MEC-DE-Test</PackageName>
+		<!-- Edit the displayName element that will be shown for the imported package in the Intune console -->
+		<displayName>Microsoft365Apps MEC DE Test</displayName>
+		<!-- Edit the Description element that will be shown for the imported package in the Intune console -->
+		<Description>Microsoft365Apps4Enterprise - Monthly Enterprise Channel x64 Deutsch
+		Ohne Visio, Project, Access, Groove und Skype4Business
+		Download und Update über CDN</Description>
+		<!-- Edit the Publisher name if required -->
+		<Publisher>Microsoft</Publisher>
+		<!-- Edit the Category element that will be shown for the imported package in the Intune console -->
+		<Category>Business</Category>
+		<!-- Edit the LogoFile element to provide a logo shown in Company Portal -->
+		<LogoFile>IFHLogo.png</LogoFile>
+		<!-- Edit the AADGroupName element used for the required/available/uninstall group creation -->
+		<AADGroupName>AAD-RG-SW-M365Apps-MEC-DE-test</AADGroupName>
+		<Version>MEC</Version>
+	</IntuneWin_Settings>
+</CONFIG>

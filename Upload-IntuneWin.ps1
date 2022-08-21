@@ -1,9 +1,20 @@
+<#
+#region ToDo
+- Header updaten
+- Processing testen
+- clean up
+- 
+#endregion ToDo
+#>
+
 #region Initialisation...
 <#
 
 .COPYRIGHT
-Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+Original Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT license.
+Additional Copyright for changes (c) 2022 Fabian Niesen. All rights reserved. Licensed under the MIT license.
 See LICENSE in the project root for license information.
+
 
 #>
 #Script to create and upload IntuneWin packages
@@ -52,7 +63,11 @@ $logFile = "$logPath\$LogName.log"
 Add-Type -AssemblyName Microsoft.VisualBasic
 $script:EventLogName = "Application"
 $script:EventLogSource = "EventSystem"
+Write-Output "packagePath: $packagePath"
 $packagePath = $packagePath.Trim()
+$packagePath = $packagePath.replace('\.\', '\')
+IF ( $packagePath.EndsWith("\") )    { $packagePath = $packagePath.TrimEnd("\") }
+Write-Output "Sanitized packagePath: $packagePath"
 $SourcePath = "$packagePath\Source"
 
 If (!($intuneWinAppUtilPath)) {
@@ -119,9 +134,7 @@ Function Write-Log {
         [Parameter(HelpMessage = 'Outputs message to Event Log,when used with -WriteEventLog')]
         [switch]$WriteEventLog
     )
-    Write-Host
     Write-Host $Message
-    Write-Host
     $TimeGenerated = "$(Get-Date -Format HH:mm:ss).$((Get-Date).Millisecond)+000"
     $Line = '<![LOG[{0}]LOG]!><time="{1}" date="{2}" component="{3}" context="" type="{4}" thread="" file="">'
     $LineFormat = $Message, $TimeGenerated, (Get-Date -Format MM-dd-yyyy), "$($MyInvocation.ScriptName | Split-Path -Leaf):$($MyInvocation.ScriptLineNumber)", $LogLevel
@@ -249,23 +262,10 @@ NAME: Get-AuthToken
 
     $AadModule = Get-Module -Name "AzureAD" -ListAvailable
 
-    <#
     if ($null -eq $AadModule) {
-        write-host
-        write-host "AzureAD Powershell module not installed..." -f Red
-        write-host "Install by running 'Install-Module AzureAD' or 'Install-Module AzureADPreview' from an elevated PowerShell prompt" -f Yellow
-        write-host "Script can't continue..." -f Red
-        write-host
-        exit
-    }
-#>
-
-    if ($null -eq $AadModule) {
-        write-host
-        write-host "AzureAD Powershell module not installed..." -f Red
-        write-host "Attempting module install now (requires Admin rights!)" -f Red
+        Write-Log "AzureAD Powershell module not installed..." -f -LogLevel 2
+        Write-Log "Attempting module install now (requires Admin rights!)" -LogLevel 2
         Install-Module -Name AzureAD -AllowClobber -Force -Scope CurrentUser
-        write-host
     }
 
     # Getting path to ActiveDirectory Assemblies
@@ -340,9 +340,7 @@ NAME: Get-AuthToken
 
         else {
 
-            Write-Host
-            Write-Host "Authorization Access Token is null, please re-run authentication..." -ForegroundColor Red
-            Write-Host
+            Write-Log "Authorization Access Token is null, please re-run authentication..." -LogLevel 3
             break
 
         }
@@ -351,9 +349,8 @@ NAME: Get-AuthToken
 
     catch {
 
-        write-host $_.Exception.Message -f Red
+        write-Log "$($_.Exception.Message) $($_.Exception.ItemName)"  -LogLevel 3
         write-host $_.Exception.ItemName -f Red
-        write-host
         break
 
     }
@@ -533,8 +530,7 @@ function UploadFileToAzureStorage($sasUri, $filepath, $fileUri) {
 			
             $currentChunk = $chunk + 1;			
 
-            Write-Progress -Activity "Uploading File to Azure Storage" -status "Uploading chunk $currentChunk of $chunks" `
-                -percentComplete ($currentChunk / $chunks * 100)
+            Write-Progress -Activity "Uploading File to Azure Storage" -status "Uploading chunk $currentChunk of $chunks" -percentComplete ($currentChunk / $chunks * 100) -Id 3 -ParentId 2
 
             $uploadResponse = UploadAzureStorageChunk $sasUri $id $bytes;
 			
@@ -548,7 +544,7 @@ function UploadFileToAzureStorage($sasUri, $filepath, $fileUri) {
 
         }
 
-        Write-Progress -Completed -Activity "Uploading File to Azure Storage"
+        Write-Progress -Completed -Activity "Uploading File to Azure Storage" -Id 3 -ParentId 2
 
         $reader.Close();
 
@@ -933,8 +929,8 @@ Function New-DetectionRule() {
         [String]$RegistryValue,
 
         [parameter(Mandatory = $true, ParameterSetName = "Registry")]
-        [ValidateSet("True", "False")]
-        [string]$check32BitRegOn64System = "False"
+        [ValidateSet("true", "false")]
+        [string]$check32BitRegOn64System = "false"
 
     )
 
@@ -1049,7 +1045,7 @@ Function Get-IntuneWinXML() {
     Add-Type -Assembly System.IO.Compression.FileSystem
     $zip = [IO.Compression.ZipFile]::OpenRead("$SourceFile")
 
-    $zip.Entries | where { $_.Name -like "$filename" } | foreach {
+    $zip.Entries | Where-Object { $_.Name -like "$filename" } | ForEach-Object {
 
         [System.IO.Compression.ZipFileExtensions]::ExtractToFile($_, "$Directory\$filename", $true)
 
@@ -1057,7 +1053,7 @@ Function Get-IntuneWinXML() {
 
     $zip.Dispose()
 
-    [xml]$IntuneWinXML = gc "$Directory\$filename"
+    [xml]$IntuneWinXML = Get-Content "$Directory\$filename"
 
     return $IntuneWinXML
 
@@ -1226,7 +1222,7 @@ NAME: Upload-Win32LOB
 
         If ( $AppType -ne "Edge" ) {
             Write-Host "Testing if SourceFile '$SourceFile' Path is valid..." -ForegroundColor Yellow
-            $SourceFile = $PSScriptRoot +"\"+$SourceFile
+            #$SourceFile = $PSScriptRoot +"\"+$SourceFile
             Test-SourceFile "$SourceFile"
             #$Win32Path = "$SourceFile"
 
@@ -1540,6 +1536,13 @@ NAME: Get-XMLConfig
                 Write-Log -Message "Reading detection for RuleType: $RuleType"
                 $script:FilePath = [string]$XMLEntity.FilePath
             }
+            If ($RuleType -eq "CUSTOM") { 
+                Write-Log -Message "Reading detection for RuleType: $RuleType"
+                $script:CustomRule = [string]$XMLEntity.CustomRule
+                $script:CustomType = [string]$XMLEntity.CustomType
+                $script:CustomPath = [string]$XMLEntity.CustomPath
+                $script:CustomMethod = [string]$XMLEntity.CustomMethod
+            }
             $script:ReturnCodeType = [string]$XMLEntity.ReturnCodeType
             $script:InstallExperience = [string]$XMLEntity.InstallExperience
             $script:PackageName = [string]$XMLEntity.PackageName
@@ -1638,8 +1641,8 @@ $Arguments = "-q -c ""$SourcePath"" -s ""$SourcePath\$PackageName.ps1"" -o ""$PS
         Else {
             Write-Log -Message "Existing output path: [$packagePath\IntuneWin] found, re-creating..."
             Try {
-                Remove-Item -Path "$packagePath\IntuneWin" -Recurse -Force | out-null
-                New-Item -Path "$packagePath\IntuneWin" -ItemType Directory -Force | out-null
+                Remove-Item -Path "$packagePath\IntuneWin" -Recurse -Force -Confirm:$false | out-null
+                New-Item -Path "$packagePath\IntuneWin" -ItemType Directory -Force -Confirm:$false | out-null
             }
 
             Catch {
@@ -1651,7 +1654,6 @@ $Arguments = "-q -c ""$SourcePath"" -s ""$SourcePath\$PackageName.ps1"" -o ""$PS
         Write-Log -Message "Building arguments..."
         $Arguments = "-q -c ""$PackageSourcePath"" -s ""$PackageSourcePath\$IntuneAppPackage"" -o ""$packagePath\IntuneWin"""
         Write-Log -Message "Arguments built as: $Arguments"
-            
         Write-Log -Message "Running IntuneWinApp..."
         Start-Process -FilePath $IntuneWinAppUtil -ArgumentList $Arguments -WindowStyle Hidden -Wait
 
@@ -1759,8 +1761,31 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
                 Write-Log -Message "installCmdLine: [$installCmdLine]"
                 Write-Log -Message "uninstallCmdLine: [$uninstallCmdLine]"
             }
-
-            If ( ( $RuleType -eq "TAGFILE" ) -and ( ! ( $AppType -eq "MSI" ) ) ) {
+            <# Added Custom Rule #>
+            If ( $RuleType -eq "CUSTOM") {
+                $CustomMethod = $script:CustomMethod
+                $CustomPath = $script:CustomPath
+                Write-Log -Message "CustomMethod: $CustomMethod"
+                Write-Log -Message "CustomPath: $CustomPath"
+                If ( $script:CustomType -eq "REGKEY") {
+                    If ( $script:CustomMethod -eq "EXISTS"){
+                        $RegistryRule = New-DetectionRule -Registry -RegistryKeyPath $CustomPath -RegistryDetectionType exists -check32BitRegOn64System false
+                    }
+                    Write-Log -Message "RegistryRule: [$RegistryRule]"
+                    # Creating Array for detection Rule
+                    $DetectionRule = @($RegistryRule)
+                } ELSEIF ( $script:CustomType -eq "FILE") {
+                    If ( $script:CustomMethod -eq "EXISTS"){
+                        $FileRule = New-DetectionRule -File -Path $CustomPath -FileDetectionType "exists" -check32BitOn64System "false"
+                    }
+                    Write-Log -Message "FileRule: [$FileRule]"
+                    $DetectionRule = @($FileRule)
+                } ELSE {
+                    Write-Log -Message "Unknown CustomType: $($script:CustomType)" -LogLevel 3
+                    break 
+                }
+            }
+            ElseIf ( ( $RuleType -eq "TAGFILE" ) -and ( ! ( $AppType -eq "MSI" ) ) ) {
                 Write-Log -Message "Building variables for RuleType: $RuleType"
                 If ($installExperience -eq "System") {
                     Write-Log -Message "Creating TagFile detection rule for System install"
@@ -1821,7 +1846,8 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
             }
 
             #$installExperience = "System"
-
+            Write-Progress -activity "Upload-IntuneWin" -Status "Call New-IntuneWin32AppIcon function..." -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+            $progess1++
             $Icon = New-IntuneWin32AppIcon -FilePath "$packagePath\$LogoFile"
 
         }
@@ -1834,19 +1860,17 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
 
         #Check if package already exists
         If ( ! ( IsNull ( $appID ) ) ) {
+            Write-Output "appID: $appID"
             Write-Log -Message "Detected existing package in Intune: $displayName"
             Write-Log -Message "Manual upload of the new IntuneWin package required."
-            Write-Log -Message "Upload content: "
-            Write-Host
-            Write-Host "$script:SourceFile" -ForegroundColor Cyan
-            Write-Host
-            Write-Host
+            Write-Log -Message "Upload content: $($script:SourceFile)" -LogLevel 2
             Exit                
         }
         Else {
             Write-Log -Message "Existing package not found"
         }
-
+        Write-Progress -activity "Upload-IntuneWin" -Status "Win32 Application Upload" -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+        $progess1++
         # Win32 Application Upload
         If ($AppType -eq "MSI") {
             Write-Log -Message "Preparing MSI package"
@@ -1869,7 +1893,7 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
             }
         }
         ElseIf ($AppType -eq "EXE") {
-            Write-Log -Message "Preparing EXE package"
+            Write-Log -Message "Preparing EXE package - SourceFile: $SourceFile"
             Upload-Win32Lob -EXE -SourceFile "$SourceFile" -publisher "$Publisher" -description "$Description" -detectionRules $DetectionRule `
                 -returnCodes $ReturnCodes -displayName $displayName -installCommandLine $installCmdLine -uninstallCommandLine $uninstallCmdLine -installExperience $installExperience -logo $Icon -Category $Category
         }
@@ -1905,13 +1929,15 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
             #>
         }
         #Exit
+        Write-Progress -activity "Upload-IntuneWin" -Status "Create AAD groups for install/uninstall" -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+        $progess1++
         Write-Log -Message "Create AAD groups for install/uninstall"
         $script:exitCode = New-AADSWGroup -groupName $AADGroupName
 
         Write-Host "Sleeping for $sleep seconds to allow AAD group creation..." -f Magenta
-        Start-Sleep $sleep
-        Write-Host
-            
+        Start-Sleep $sleep            
+        Write-Progress -activity "Upload-IntuneWin" -Status "Assigning AAD groups for install/uninstall" -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+        $progess1++
         #If ($script:exitCode -eq 0) {
         Write-Log -Message "Assigning AAD groups for install/uninstall"
 
@@ -2094,16 +2120,17 @@ NAME: Get-ApplicationID
 
         If (IsNull($application)) {
             Write-Log -Message "Error - could not find application: $application" -LogLevel 3
+            $appID = $null
             #$script:exitCode = -1
         }
         Else {
             Write-Log -Message "Found application: $application"
+            $appID = $($application).id
             #$script:exitCode = 0
             
         }
-        $appID = $($application).id
         Write-Log -Message "Returning application ID: [$appID]"
-        Return $appID
+        Return $appID 
     }
 }
 
@@ -2556,6 +2583,7 @@ function New-IntuneWin32AppIcon {
         Updated:     2020-01-04
 
         Version history:
+        1.0.1 - 21.08.2022 Modified by Fabian Niesen
         1.0.0 - (2020-01-04) Function created
     #>
     [CmdletBinding(SupportsShouldProcess = $true)]
@@ -2582,10 +2610,11 @@ function New-IntuneWin32AppIcon {
     )
     # Handle error action preference for non-cmdlet code
     $ErrorActionPreference = "Stop"
-    $FilePath = $PSScriptRoot+"\"+$FilePath
+    #$FilePath = $PSScriptRoot+"\"+$FilePath
     try {
         # Encode image file as Base64 string
-        $EncodedBase64String = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$($FilePath)"))
+        #$EncodedBase64String = [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes("$($FilePath)"))
+        $EncodedBase64String = [System.Convert]::ToBase64String((Get-Content $FilePath -Encoding Byte))
         Write-Output -InputObject $EncodedBase64String
     }
     catch [System.Exception] {
@@ -2653,45 +2682,12 @@ Function Test-AuthToken() {
 }
 
 ####################################################
-
+Write-Progress -activity "Upload-IntuneWin" -Status "starting" -PercentComplete "0" -Id 2 -ParentId 1
+[int]$progess1 = 1
+[int]$progrss1steps = 10 #count of progress steps
 Start-Log -FilePath $logFile -DeleteExistingFile
-Write-Host
-Write-Host "Script log file path is [$logFile]" -f Cyan
-Write-Host
+Write-Output "Script log file path is [$logFile]" -f Cyan
 Write-Log -Message "Starting $ScriptName version $BuildVer" -WriteEventLog
-
-<#
-####################################################
-# Sample Win32 Application
-####################################################
-
-$SourceFile = "C:\packages\package.intunewin"
-
-# Defining Intunewin32 detectionRules
-$DetectionXML = Get-IntuneWinXML "$SourceFile" -fileName "detection.xml"
-
-# Defining Intunewin32 detectionRules
-$FileRule = New-DetectionRule -File -Path "C:\Program Files\Application" `
--FileOrFolderName "application.exe" -FileDetectionType exists -check32BitOn64System False
-
-$RegistryRule = New-DetectionRule -Registry -RegistryKeyPath "HKEY_LOCAL_MACHINE\SOFTWARE\Program" `
--RegistryDetectionType exists -check32BitRegOn64System True
-
-$MSIRule = New-DetectionRule -MSI -MSIproductCode $DetectionXML.ApplicationInfo.MsiInfo.MsiProductCode
-
-# Creating Array for detection Rule
-$DetectionRule = @($FileRule,$RegistryRule,$MSIRule)
-
-$ReturnCodes = Get-DefaultReturnCodes
-
-$ReturnCodes += New-ReturnCode -returnCode 302 -type softReboot
-$ReturnCodes += New-ReturnCode -returnCode 145 -type hardReboot
-
-# Win32 Application Upload
-Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" `
--description "Description" -detectionRules $DetectionRule -returnCodes $ReturnCodes `
--installCmdLine "powershell.exe .\install.ps1" `
--uninstallCmdLine "powershell.exe .\uninstall.ps1"
 
 ####################################################
 #>
@@ -2707,6 +2703,8 @@ Upload-Win32Lob -SourceFile "$SourceFile" -publisher "Publisher" `
 #Script specific variables
 
 #Check package path is valid
+Write-Progress -activity "Upload-IntuneWin" -Status "Check package path" -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+$progess1++
 If ( ! ( Test-Path $packagePath ) ) {
     Write-Log -Message "Error - path not valid: $packagePath"
     Exit
@@ -2791,6 +2789,8 @@ If ( $AppType -ne "Edge" ) {
 }
 
 Write-Log -Message "Call Build-IntuneAppPackage function..."
+Write-Progress -activity "Upload-IntuneWin" -Status "Call Build-IntuneAppPackage function..." -PercentComplete (($progess1 / $progrss1steps)*100) -Id 2 -ParentId 1
+$progess1++
 Build-IntuneAppPackage -AppType $AppType -RuleType $RuleType -ReturnCodeType $ReturnCodeType -InstallExperience $InstallExperience -Logo $LogoFile -AADGroupName $AADGroupName
 Write-Log -Message "Return code from Build-IntuneAppPackage: $script:exitCode"
 
@@ -2801,7 +2801,7 @@ If ( $script:exitCode -eq "-1" ) {
 
 
 Write-Log -Message "Removing folder: $packagePath\IntuneWin"
-Remove-Item -Path "$packagePath\IntuneWin" -Recurse -Force
+Remove-Item -Path "$packagePath\IntuneWin" -Recurse -Force -Confirm:$false
 
 Write-Log "$ScriptName completed." -WriteEventLog
 Return $script:exitCode
