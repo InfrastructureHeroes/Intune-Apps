@@ -53,7 +53,7 @@ param(
 )
 $script:exitCode = 0
 
-$BuildVer = "1.1"
+$BuildVer = "1.2"
 $ProgramFiles = $env:ProgramFiles
 $ScriptName = $myInvocation.MyCommand.Name
 $ScriptName = $ScriptName.Substring(0, $ScriptName.Length - 4)
@@ -66,8 +66,11 @@ $script:EventLogSource = "EventSystem"
 Write-Output "packagePath: $packagePath"
 $packagePath = $packagePath.Trim()
 $packagePath = $packagePath.replace('\.\', '\')
+$packagePath = $packagePath.replace('.\', '')
 IF ( $packagePath.EndsWith("\") )    { $packagePath = $packagePath.TrimEnd("\") }
 Write-Output "Sanitized packagePath: $packagePath"
+$packagePath = $PSScriptRoot + "\" + $packagePath
+Write-Output "Full PackagePath: $packagePath"
 $SourcePath = "$packagePath\Source"
 
 If (!($intuneWinAppUtilPath)) {
@@ -1770,6 +1773,9 @@ NAME: Build-IntuneAppPackage -AppType IntuneAppPackageType -RuleType TAGFILE -Re
                 If ( $script:CustomType -eq "REGKEY") {
                     If ( $script:CustomMethod -eq "EXISTS"){
                         $RegistryRule = New-DetectionRule -Registry -RegistryKeyPath $CustomPath -RegistryDetectionType exists -check32BitRegOn64System false
+                    }
+                    ELSEIF ($script:CustomMethod -eq "string"){
+                        $RegistryRule = New-DetectionRule -Registry -RegistryKeyPath $CustomPath -RegistryDetectionType string -RegistryValue $script:CustomRule -check32BitRegOn64System false
                     }
                     Write-Log -Message "RegistryRule: [$RegistryRule]"
                     # Creating Array for detection Rule
