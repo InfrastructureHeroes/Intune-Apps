@@ -26,3 +26,6 @@ I Recomment to use PSCMWin10Language (https://github.com/codaamok/PSCMWin10Langu
 Check out for more information: https://sysmansquad.com/2020/06/08/deploy-languages-via-software-center-with-pscmwin10language/
 
 This packages are based upon the repository from https://github.com/gregnottage/IntuneScripts
+
+# Known Bugs
+Some parts are not fully translated, please check https://github.com/InfrastructureHeroes/Intune-Apps/issues/7 for more details.
