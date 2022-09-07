@@ -1,0 +1,54 @@
+<!-- <></> -->
+<CONFIG>
+	<!-- Apart from username, leave Azure_Settings unchanged -->
+	<!-- Completely remove the <Username> element and script will prompt -->
+	<Azure_Settings>
+		<Username>IntuneUser@YourTenantName.com</Username>
+		<baseUrl>https://graph.microsoft.com/beta/deviceAppManagement/</baseUrl>
+		<logRequestUris>$true</logRequestUris>
+		<logHeaders>$false</logHeaders>
+		<logContent>$true</logContent>
+		<azureStorageUploadChunkSizeInMb>6l</azureStorageUploadChunkSizeInMb>
+		<sleep>20</sleep>
+	</Azure_Settings>
+	<IntuneWin_Settings>
+		<!-- Edit the AppType element - supported options are MSI, EXE or PS1 -->
+		<AppType>EXE</AppType>
+		<!-- Edit the installCmdLine element when using the EXE or MSI AppType -->
+		<installCmdLine>Dell_SupportAssist_for_Business.exe -DeploymentType 'Install' -DeployMode 'NonInteractive'</installCmdLine>
+		<!-- Edit the uninstallCmdLine element when using the EXE or MSI AppType -->
+		<uninstallCmdLine>Dell_SupportAssist_for_Business.exe -DeploymentType "Uninstall"</uninstallCmdLine>
+		<!-- Edit the RuleType element - supported options are CUSTOM, TAGFILE , FILE or REGTAG -->
+		<!-- Ignored if AppType is MSI-->
+		<RuleType>FILE</RuleType>
+		<!-- Edit for custom detection Rule - CustomType can be FILE or REGKEY -->
+		<CustomType></CustomType>
+		<CustomRule></CustomRule>
+		<!-- Can be Reg or File Path-->
+		<CustomPath></CustomPath>
+		<!-- Only "EXISTS" is implemented-->
+		<CustomMethod></CustomMethod>
+		<!-- Edit the FilePath element when using the FILE RuleType -->
+		<FilePath>C:\Program Files\Dell\SupportAssistBusinessClient\bin</FilePath>
+		<!-- !!! Do NOT Edit the ReturnCodeType element !!! -->
+		<ReturnCodeType>DEFAULT</ReturnCodeType>
+		<!-- Edit the InstallExperience element - supported options are System or User -->
+		<InstallExperience>System</InstallExperience>
+		<!-- Edit the PackageName element to match the name of the .PS1 script that the IntuneWinAppUtil should reference -->
+		<!-- For MSI or EXE AppType - this must be the name of the MSI or executable file in the ..\Source folder - without the .exe in the name -->
+		<PackageName>Dell_SupportAssist_for_Business</PackageName>
+		<!-- Edit the displayName element that will be shown for the imported package in the Intune console -->
+		<displayName>Dell SupportAssist for Business PCs_3.2.0.87_X64</displayName>
+		<!-- Edit the Description element that will be shown for the imported package in the Intune console -->
+		<Description>Warning! You need to download your binary from TechDirect. Otherwise the device will add to the Tenant of the binary creator.</Description>
+		<!-- Edit the Publisher name if required -->
+		<Publisher>Dell Inc.</Publisher>
+		<!-- Edit the Category element that will be shown for the imported package in the Intune console -->
+		<Category>Business</Category>
+		<!-- Edit the LogoFile element to provide a logo shown in Company Portal -->
+		<LogoFile>IFHLogo.png</LogoFile>
+		<!-- Edit the AADGroupName element used for the required/available/uninstall group creation -->
+		<AADGroupName>AAD-RG-SW-Dell_SupportAssist_for_Business</AADGroupName>
+		<Version>3.2.0.87_X64</Version>
+	</IntuneWin_Settings>
+</CONFIG>
